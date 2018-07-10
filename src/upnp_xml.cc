@@ -106,8 +106,6 @@ Ref<Element> UpnpXML_DIDLRenderObject(Ref<CdsObject> obj, bool renderActions, in
                 result->appendTextChild(key, el->getValue());
         }
 
-        CdsResourceManager::addResources(item, result);
-        
         if (upnp_class == UPNP_DEFAULT_CLASS_MUSIC_TRACK) {
             Ref<Storage> storage = Storage::getInstance();
             // extract extension-less, lowercase track name to search for corresponding
@@ -136,6 +134,8 @@ Ref<Element> UpnpXML_DIDLRenderObject(Ref<CdsObject> obj, bool renderActions, in
             }
         }
         result->setName(_("item"));
+
+        CdsResourceManager::addResources(item, result);
     }
     else if (IS_CDS_CONTAINER(objectType))
     {
