@@ -20,116 +20,68 @@
   $Id$
 */
 
-function addAudio(obj) {
-    var desc = '';
-    var artist_full;
-    var album_full;
-    
-    // first gather data
-    var title = obj.meta[M_TITLE];
-    if (!title) {
-        title = obj.title;
-    }
-    
-    var artist = obj.meta[M_ARTIST];
-    if (!artist) {
-        artist = 'Unknown';
-        artist_full = null;
-    } else {
-        artist_full = artist;
-        desc = artist;
-    }
-    
-    var album = obj.meta[M_ALBUM];
-    if (!album) {
-        album = 'Unknown';
-        album_full = null;
-    } else {
-        desc = desc + ', ' + album;
-        album_full = album;
-    }
-    
-    if (desc) {
-        desc = desc + ', ';
-    }
-    desc = desc + title;
-    
-    var date = obj.meta[M_DATE];
-    if (!date) {
-        date = 'Unknown';
-    } else {
-        date = getYear(date);
-        desc = desc + ', ' + date;
-    }
-    
-    var genre = obj.meta[M_GENRE];
-    if (!genre) {
-        genre = 'Unknown';
-    } else {
-        desc = desc + ', ' + genre;
-    }
-    
-    var description = obj.meta[M_DESCRIPTION];
-    if (!description) {
-        obj.meta[M_DESCRIPTION] = desc;
-    }
-
-// uncomment this if you want to have track numbers in front of the title
-// in album view
-    
-/*    
-    var track = obj.meta[M_TRACKNUMBER];
-    if (!track) {
-        track = '';
-    } else {
-        if (track.length == 1) {
-            track = '0' + track;
-        }
-        track = track + ' ';
-    }
-*/
-    // comment the following line out if you uncomment the stuff above  :)
-    var track = '';
-
-    var chain = ['Audio', 'All Audio'];
-    obj.title = title;
-    addCdsObject(obj, createContainerChain(chain));
-    
-    chain = ['Audio', 'Artists', artist, 'All Songs'];
-    addCdsObject(obj, createContainerChain(chain));
-    
-    chain = ['Audio', 'All - full name'];
-    var temp = '';
-    if (artist_full) {
-        temp = artist_full;
-    }
-    
-    if (album_full) {
-        temp = temp + ' - ' + album_full + ' - ';
-    } else {
-        temp = temp + ' - ';
-    }
-   
-    obj.title = temp + title;
-    addCdsObject(obj, createContainerChain(chain));
-    
-    chain = ['Audio', 'Artists', artist, 'All - full name'];
-    addCdsObject(obj, createContainerChain(chain));
-    
-    chain = ['Audio', 'Artists', artist, album];
-    obj.title = track + title;
-    addCdsObject(obj, createContainerChain(chain), UPNP_CLASS_CONTAINER_MUSIC_ALBUM);
-    
-    chain = ['Audio', 'Albums', album];
-    obj.title = track + title; 
-    addCdsObject(obj, createContainerChain(chain), UPNP_CLASS_CONTAINER_MUSIC_ALBUM);
-    
-    chain = ['Audio', 'Genres', genre];
-    addCdsObject(obj, createContainerChain(chain), UPNP_CLASS_CONTAINER_MUSIC_GENRE);
-    
-    chain = ['Audio', 'Year', date];
-    addCdsObject(obj, createContainerChain(chain));
-}
+function addAudio(obj) { 
+    var chain = new Array('Audio', 'Folders'); 
+  
+    /** @type{string} */ 
+    var path = obj.location; 
+    var extension = path.substring(path.lastIndexOf('.')+1); 
+  
+    //determine path of file 
+    if (path.indexOf('Audio')>0 && extension in {'mp3':0,'wav':0,'wma':0,'ogg':0,'m4a':0,'flac':0} ) { 
+        path=path.substring(path.indexOf('Audio')+6, path.lastIndexOf('/')); 
+  
+        var title = obj.meta[M_TITLE]; 
+        if (!title) title = obj.title; 
+  
+        //set display name 
+        obj.title = title; 
+  
+        //insert item into it's own folder as well as virtual "all files" folder 
+        chain = chain.concat(path.split('/')); 
+        var container = createContainerChain(chain); 
+        addCdsObject(obj, container, UPNP_CLASS_CONTAINER_MUSIC_ALBUM); 
+    } 
+} 
+ 
+if (getPlaylistType(orig.mimetype) == '') 
+{ 
+    var arr = orig.mimetype.split('/'); 
+    var mime = arr[0]; 
+ 
+    // var obj = copyObject(orig); 
+ 
+    var obj = orig; 
+    obj.refID = orig.id; 
+ 
+    if (mime == 'audio') 
+    { 
+            addAudio(obj); 
+    } 
+ 
+    if (mime == 'video') 
+    { 
+        if (obj.onlineservice == ONLINE_SERVICE_YOUTUBE) 
+            ; // addYouTube(obj); 
+        else if (obj.onlineservice == ONLINE_SERVICE_APPLE_TRAILERS) 
+            ; // addTrailer(obj); 
+        else 
+            ; // addVideo(obj); 
+    } 
+ 
+    if (mime == 'image' && obj.title=='Cover.jpg') 
+    { 
+        addAudio(obj); 
+    } 
+ 
+    if (orig.mimetype == 'application/ogg') 
+    { 
+        if (orig.theora == 1) 
+            ; // addVideo(obj); 
+        else 
+            ; // addAudio(obj); 
+    } 
+} 
 
 function addVideo(obj) {
     var chain = ['Video', 'All Video'];
@@ -202,36 +154,36 @@ function addTrailer(obj) {
 
 // main script part
 
-if (getPlaylistType(orig.mimetype) === '') {
-    var arr = orig.mimetype.split('/');
-    var mime = arr[0];
-    
-    // var obj = copyObject(orig);
-    
+if (getPlaylistType(orig.mimetype) === '') { 
+    var arr = orig.mimetype.split('/'); 
+    var mime = arr[0]; 
+ 
+    // var obj = copyObject(orig); 
+ 
     var obj = orig; 
-    obj.refID = orig.id;
-    
-    if (mime === 'audio') {
-        addAudio(obj);
-    }
-    
-    if (mime === 'video') {
+    obj.refID = orig.id; 
+ 
+    if (mime === 'audio') { 
+            addAudio(obj); 
+    } 
+ 
+    if (mime === 'video') { 
         if (obj.onlineservice === ONLINE_SERVICE_APPLE_TRAILERS) {
             addTrailer(obj);
         } else {
             addVideo(obj);
         }
-    }
-    
-    if (mime === 'image') {
-        addImage(obj);
-    }
-
-    if (orig.mimetype === 'application/ogg') {
-        if (orig.theora === 1) {
-            addVideo(obj);
-        } else {
-            addAudio(obj);
-        }
-    }
-}
+    } 
+ 
+    if (mime === 'image' && obj.title=='Cover.jpg') { 
+        addAudio(obj); 
+    } 
+ 
+    if (orig.mimetype == 'application/ogg') 
+    { 
+        if (orig.theora == 1) 
+            ; // addVideo(obj); 
+        else 
+            ; // addAudio(obj); 
+    } 
+} 
